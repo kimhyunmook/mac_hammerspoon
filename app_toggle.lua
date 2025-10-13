@@ -1,6 +1,3 @@
--- app_toggle.lua
--- 범용 앱 토글 함수 모듈
--- 실행 시 Dock에 잠깐 보일 수 있음. (macOS 제한)
 
 local M = {}
 
