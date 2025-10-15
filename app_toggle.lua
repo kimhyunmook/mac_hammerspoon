@@ -31,10 +31,21 @@ function M.setupAppToggle(config)
                 local ok = hs.application.launchOrFocus(bundleID)
                 if not ok then hs.application.launchOrFocus(appName) end
             end
-            hs.timer.doAfter(0.5, function()
-                local a = getApp()
-                if a then a:activate() end
-            end)
+            
+            -- 앱이 실제로 시작될 때까지 감지 (최대 5초)
+            hs.timer.waitUntil(
+                function()
+                    -- 조건: 앱이 실행되었는지 확인
+                    local a = getApp()
+                    return a ~= nil
+                end,
+                function()
+                    -- 앱이 시작되면 활성화
+                    local a = getApp()
+                    if a then a:activate() end
+                end,
+                0.05  -- 0.05초마다 확인 (빠른 응답)
+            )
         else
             -- 이미 실행 중이면
             if app:isFrontmost() then
