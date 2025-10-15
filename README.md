@@ -2,20 +2,39 @@
 
 ## 사용법
 
-- 터미널 열고 해당 cli 복사
+### 1. 설치
+
+터미널을 열고 아래 명령어를 실행하세요:
 
 ```bash
+# 기존 설정이 있다면 백업 (선택사항)
+# mv ~/.hammerspoon ~/.hammerspoon.backup
+
+# 저장소를 ~/.hammerspoon 폴더로 직접 클론
 cd ~
-git clone https://github.com/kimhyunmook/mac_hammerspoon.git temp_clone
-cp -R temp_clone/* ~/.hammerspoon/
-rm -rf temp_clone
+git clone https://github.com/kimhyunmook/mac_hammerspoon.git .hammerspoon
 ```
 
-- 설치가 잘 됐는지 확인
+### 2. 설치 확인
 
 ```bash
 cd ~/.hammerspoon
 git status
 ```
 
-- 설치 가 잘 됐다면 상당 해머 모양 누르고 reload config
+정상적으로 설치되었다면 Git 상태가 표시됩니다.
+
+### 3. 설정 적용
+
+- 화면 상단 해머 모양 아이콘을 클릭
+- **Reload Config** 선택
+
+## 설정 커스터마이징
+
+`config.lua` 파일에서 개인 설정을 변경할 수 있습니다:
+
+```lua
+config.cursor = {
+    defaultFolder = os.getenv("HOME") .. "/Desktop/back"  -- 원하는 경로로 변경
+}
+```
