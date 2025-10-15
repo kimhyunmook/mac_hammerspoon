@@ -1,5 +1,7 @@
 # mac_hammerspoon
 
+- 먼저 hammerspoon 설치가 필요합니다.
+
 ## 사용법
 
 ### 1. 설치
