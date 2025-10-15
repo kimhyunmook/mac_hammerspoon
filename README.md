@@ -4,15 +4,30 @@
 
 ### 1. 설치
 
-터미널을 열고 아래 명령어를 실행하세요:
+#### 방법 A: 새로 설치 (기존 폴더가 없거나 백업 후 설치)
 
 ```bash
-# 기존 설정이 있다면 백업 (선택사항)
-# mv ~/.hammerspoon ~/.hammerspoon.backup
+cd ~
+# 기존 폴더가 있다면 백업
+mv ~/.hammerspoon ~/.hammerspoon.backup
 
 # 저장소를 ~/.hammerspoon 폴더로 직접 클론
-cd ~
 git clone https://github.com/kimhyunmook/mac_hammerspoon.git .hammerspoon
+```
+
+#### 방법 B: 기존 폴더가 이미 있는 경우
+
+```bash
+cd ~/.hammerspoon
+
+# 기존 Git 정보 제거 (있다면)
+rm -rf .git
+
+# Git 저장소 초기화 및 원격 저장소 연결
+git init
+git remote add origin https://github.com/kimhyunmook/mac_hammerspoon.git
+git fetch
+git reset --hard origin/main
 ```
 
 ### 2. 설치 확인
