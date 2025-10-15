@@ -1,3 +1,4 @@
-require("domian.kakao_toggle")
-require("domian.cursor_launcher")
+-- 앱별 설정 로드
+require("apps.kakao")
+require("apps.cursor")
 
