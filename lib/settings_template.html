@@ -128,21 +128,14 @@
       // Hammerspoon 객체를 직접 정의 (injectScript 대신)
       window.hammerspoon = {
         saveSettings: function (data) {
-          console.log("[Hammerspoon] 저장 요청 받음:", data);
           // URL 변경으로 데이터 전달
           window.location.href = "hammerspoon://save?" + JSON.stringify(data);
         },
       };
 
-      // 디버깅을 위한 로그 함수
-      function log(message) {
-        console.log("[Settings Modal] " + message);
-      }
-
       // 설정 저장
       function saveSettings() {
         try {
-          log("저장 함수 시작");
 
           // 입력값 가져오기
           const defaultFolder = document.getElementById("defaultFolder").value;
@@ -159,11 +152,6 @@
           const chooserRows = parseInt(chooserRowsElement.value);
           const bgDark = bgDarkElement.value === "true";
 
-          log("입력값 확인:");
-          log("- defaultFolder: " + defaultFolder);
-          log("- chooserWidth: " + chooserWidth);
-          log("- chooserRows: " + chooserRows);
-          log("- bgDark: " + bgDark);
 
           // 입력값 검증
           if (isNaN(chooserWidth) || chooserWidth < 10 || chooserWidth > 90) {
@@ -186,7 +174,6 @@
             bgDark: bgDark,
           };
 
-          log("저장할 데이터: " + JSON.stringify(settingsData));
 
           // Hammerspoon 연결 확인
           if (typeof window.hammerspoon === "undefined") {
@@ -197,13 +184,10 @@
             throw new Error("saveSettings 함수를 찾을 수 없습니다");
           }
 
-          log("Hammerspoon 연결 확인 완료");
 
           // Hammerspoon에 데이터 전달
           window.hammerspoon.saveSettings(settingsData);
-          log("데이터 전달 완료");
         } catch (error) {
-          log("에러 발생: " + error.message);
           alert("저장 중 오류가 발생했습니다:\n\n" + error.message);
         }
       }
@@ -211,17 +195,14 @@
       // 모달 닫기
       function closeModal() {
         try {
-          log("모달 닫기 시도");
           window.close();
         } catch (error) {
-          log("모달 닫기 실패: " + error.message);
           alert("모달을 닫을 수 없습니다. Hammerspoon을 통해 닫아주세요.");
         }
       }
 
       // Hammerspoon 주입 완료 콜백
       window.hammerspoonReady = function () {
-        log("Hammerspoon 객체 주입 완료 확인됨");
         updateConnectionStatus(true);
       };
 
@@ -241,7 +222,6 @@
 
       // 페이지 로드 완료 후 초기화
       document.addEventListener("DOMContentLoaded", function () {
-        log("페이지 로드 완료");
 
         // 연결 상태 표시 요소 생성
         const statusDiv = document.createElement("div");
@@ -262,10 +242,10 @@
           typeof window.hammerspoon !== "undefined" &&
           typeof window.hammerspoon.saveSettings === "function"
         ) {
-          log("✅ Hammerspoon 객체 확인됨");
+          // Hammerspoon 객체 확인됨
           updateConnectionStatus(true);
         } else {
-          log("❌ Hammerspoon 객체가 예상과 다름");
+          // Hammerspoon 객체가 예상과 다름
           updateConnectionStatus(false);
 
           // 저장 버튼 비활성화

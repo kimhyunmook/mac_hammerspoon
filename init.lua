@@ -1,6 +1,9 @@
+-- 설정 파일 경로 상수
+local SETTINGS_PATH = hs.configdir .. "/settings.json"
+
 -- 설정 파일 확인 및 생성
 local function ensureSettingsFile()
-    local settingsPath = hs.configdir .. "/settings.json"
+    local settingsPath = SETTINGS_PATH
     local file = io.open(settingsPath, "r")
     
     if not file then
@@ -23,9 +26,9 @@ local function ensureSettingsFile()
         if settingsFile then
             settingsFile:write(hs.json.encode(defaultSettings, true))
             settingsFile:close()
-            hs.alert.show("기본 설정 파일을 생성했습니다: " .. settingsPath)
+            hs.alert.show("기본 설정 파일을 생성했습니다: " .. SETTINGS_PATH)
         else
-            hs.alert.show("설정 파일 생성에 실패했습니다: " .. settingsPath)
+            hs.alert.show("설정 파일 생성에 실패했습니다: " .. SETTINGS_PATH)
         end
     else
         file:close()
