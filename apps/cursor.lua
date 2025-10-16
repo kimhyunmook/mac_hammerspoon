@@ -1,10 +1,10 @@
 -- Cursor 런처 - 폴더 선택 후 Cursor에서 열기 (⌘ + ⌥ + A)
 
--- 설정 파일 불러오기
-local config = require("config")
-
--- 설정값 가져오기
-local DEFAULT_FOLDER = config.cursor.defaultFolder
+-- 설정을 실시간으로 로드하는 함수
+local function getConfig()
+    local config = require("config")
+    return config
+end
 
 -- Cursor 앱 설정
 local appName = "Cursor"
@@ -48,6 +48,10 @@ end
 
 hs.hotkey.bind({"cmd", "alt"}, "A", function()
     local app = getApp()
+    
+    -- 설정을 실시간으로 로드
+    local config = getConfig()
+    local DEFAULT_FOLDER = config.cursor.defaultFolder
     
     -- 기본 폴더가 존재하는지 확인
     if not hs.fs.attributes(DEFAULT_FOLDER) then
@@ -120,7 +124,7 @@ hs.hotkey.bind({"cmd", "alt"}, "A", function()
             end
         end)
         
-        -- UI 커스터마이징 (config에서 설정 가져오기)
+        -- UI 커스터마이징 (실시간 설정 가져오기)
         chooser:choices(choices)
         chooser:placeholderText(config.cursor.chooser.placeholder)
         chooser:width(config.cursor.chooser.width)

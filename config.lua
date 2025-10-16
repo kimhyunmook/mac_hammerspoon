@@ -1,33 +1,101 @@
 -- config.lua
--- Hammerspoon 전역 설정 파일
+-- Hammerspoon 전역 설정 파일 (JSON 파일에서 실시간 로드)
 
 local config = {}
 
--- ===== Cursor 설정 =====
--- 폴더 선택 시작 경로
--- 환경 변수나 절대 경로 사용 가능
--- 예시:
---   os.getenv("HOME") .. "/Desktop/back"
---   os.getenv("HOME") .. "/Documents/projects"
---   "/Users/username/workspace"
-config.cursor = {
-    defaultFolder = os.getenv("HOME") .. "/Desktop/back",
+-- JSON 설정 파일 경로
+local settingsPath = hs.configdir .. "/settings.json"
+
+-- JSON 파일에서 설정 로드하는 함수
+local function loadSettings()
+    print("📖 설정 파일 로드 시작: " .. settingsPath)
     
-    -- Chooser UI 커스터마이징
-    chooser = {
-        width = 50,          -- 화면 너비의 퍼센트 (10-90)
-        rows = 8,            -- 최대 표시 줄 수 (3-20)
-        bgDark = true,       -- 다크 모드 (true/false)
-        placeholder = "📁 Cursor에서 열 폴더를 선택하세요",
-        showSubText = true,  -- 경로 표시 여부
-        iconSize = 24        -- 아이콘 크기 (16, 24, 32, 48)
-    }
-}
+    local settingsFile = io.open(settingsPath, "r")
+    if not settingsFile then
+        print("⚠️ JSON 파일이 없음, 기본값 사용")
+        -- JSON 파일이 없으면 기본값 반환
+        return {
+            cursor = {
+                defaultFolder = os.getenv("HOME") .. "/Desktop/back",
+                chooser = {
+                    width = 50,
+                    rows = 8,
+                    bgDark = true,
+                    placeholder = "📁 Cursor에서 열 폴더를 선택하세요",
+                    showSubText = true,
+                    iconSize = 24
+                }
+            }
+        }
+    end
+    
+    local settingsContent = settingsFile:read("*all")
+    settingsFile:close()
+    
+    if not settingsContent or #settingsContent == 0 then
+        print("⚠️ JSON 파일이 비어있음, 기본값 사용")
+        return {
+            cursor = {
+                defaultFolder = os.getenv("HOME") .. "/Desktop/back",
+                chooser = {
+                    width = 50,
+                    rows = 8,
+                    bgDark = true,
+                    placeholder = "📁 Cursor에서 열 폴더를 선택하세요",
+                    showSubText = true,
+                    iconSize = 24
+                }
+            }
+        }
+    end
+    
+    print("📄 JSON 파일 내용 로드 완료 (" .. #settingsContent .. " bytes)")
+    
+    local success, settings = pcall(hs.json.decode, settingsContent)
+    if success and settings then
+        print("✅ JSON 파싱 성공")
+        print("📁 로드된 기본 폴더: " .. (settings.cursor.defaultFolder or ""))
+        return settings
+    else
+        print("❌ JSON 파싱 실패: " .. tostring(settings))
+        -- JSON 파싱 실패 시 기본값 반환
+        return {
+            cursor = {
+                defaultFolder = os.getenv("HOME") .. "/Desktop/back",
+                chooser = {
+                    width = 50,
+                    rows = 8,
+                    bgDark = true,
+                    placeholder = "📁 Cursor에서 열 폴더를 선택하세요",
+                    showSubText = true,
+                    iconSize = 24
+                }
+            }
+        }
+    end
+end
+
+-- 설정을 실시간으로 로드하는 함수
+local function getCurrentSettings()
+    return loadSettings()
+end
+
+-- 초기 설정 로드
+local initialSettings = loadSettings()
+config.cursor = initialSettings.cursor
+
+-- 실시간 설정 가져오기 함수 추가
+config.getSettings = getCurrentSettings
+config.reload = function()
+    local newSettings = getCurrentSettings()
+    config.cursor = newSettings.cursor
+    print("🔄 config 실시간 리로드 완료")
+    print("📁 새로운 기본 폴더: " .. (config.cursor.defaultFolder or ""))
+    return true
+end
 
 -- ===== 향후 다른 설정 추가 가능 =====
--- config.kakao = {
---     설정들...
--- }
+-- config.kakao = settings.kakao
 
 return config
 
