@@ -1,0 +1,18 @@
+# 설정 파일 - 개인별 설정이므로 버전 관리에서 제외
+settings.json
+
+# macOS 시스템 파일
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 로그 파일
+*.log
+
+# 임시 파일
+*.tmp
+*.temp

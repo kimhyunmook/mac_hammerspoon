@@ -167,7 +167,6 @@ end
 -- 설정 모달 생성 (Chooser 방식으로 변경)
 function M.showSettingsModal()
     print("🔧 설정 모달 시작...")
-    hs.alert.show("⚙️ 설정 모달을 엽니다...", 1)
     
     -- config 로드 시도
     local success, config = pcall(require, "config")
@@ -185,41 +184,41 @@ function M.showSettingsModal()
     
     print("📁 기본 폴더: " .. defaultFolder)
     
-    -- 설정 선택 옵션들
+    -- 설정 선택 옵션들 (더 세련된 UI)
     local choices = {
         {
             text = "📁 기본 폴더 경로 변경",
             subText = "현재: " .. defaultFolder,
             action = "defaultFolder",
-            currentValue = defaultFolder
+            currentValue = defaultFolder,
+            image = hs.image.imageFromName("NSFolder")
         },
         {
-            text = "🎨 Chooser 너비 변경",
-            subText = "현재: " .. chooserWidth .. "% (10-90)",
+            text = "🎨 Chooser 너비 설정",
+            subText = "현재: " .. chooserWidth .. "% " .. string.rep("█", math.floor(chooserWidth/10)) .. string.rep("░", 9-math.floor(chooserWidth/10)),
             action = "chooserWidth",
-            currentValue = chooserWidth
+            currentValue = chooserWidth,
+            image = hs.image.imageFromName("NSResize")
         },
         {
-            text = "📏 Chooser 행 수 변경",
-            subText = "현재: " .. chooserRows .. "행 (3-20)",
+            text = "📏 Chooser 행 수 설정",
+            subText = "현재: " .. chooserRows .. "행 " .. string.rep("▬", math.min(chooserRows, 10)),
             action = "chooserRows",
-            currentValue = chooserRows
+            currentValue = chooserRows,
+            image = hs.image.imageFromName("NSListViewTemplate")
         },
         {
-            text = "🌙 다크 모드 토글",
-            subText = "현재: " .. (bgDark and "켜짐" or "꺼짐"),
+            text = "🌙 다크 모드 설정",
+            subText = "현재: " .. (bgDark and "🔅 켜짐" or "🔆 꺼짐"),
             action = "bgDark",
-            currentValue = bgDark
+            currentValue = bgDark,
+            image = hs.image.imageFromName(bgDark and "NSStatusAvailable" or "NSStatusUnavailable")
         },
         {
-            text = "💾 모든 설정 저장",
+            text = "💾 설정 저장",
             subText = "현재 설정을 JSON 파일에 저장",
-            action = "save"
-        },
-        {
-            text = "❌ 설정 모달 닫기",
-            subText = "변경사항을 저장하지 않고 닫기",
-            action = "close"
+            action = "save",
+            image = hs.image.imageFromName("NSSaveDocumentTemplate")
         }
     }
     
@@ -238,23 +237,35 @@ function M.showSettingsModal()
             print("🎯 선택된 항목: " .. choice.action)
             
             if choice.action == "defaultFolder" then
-                -- 기본 폴더 경로 입력 (올바른 textPrompt 사용법 - 두 개의 반환값 처리)
-                local button, inputText = hs.dialog.textPrompt("기본 폴더 경로", "새로운 기본 폴더 경로를 입력하세요:", tempSettings.defaultFolder)
+                -- 기본 폴더 경로 입력 (더 세련된 UI)
+                local button, inputText = hs.dialog.textPrompt(
+                    "📁 기본 폴더 경로 설정", 
+                    "Cursor에서 열 기본 폴더의 전체 경로를 입력하세요:\n\n예: /Users/username/Desktop/projects", 
+                    tempSettings.defaultFolder
+                )
                 print("🔍 버튼:", button, "입력 텍스트:", inputText)
                 
-                -- textPrompt는 (버튼라벨, 입력텍스트) 두 개의 값을 반환
                 if button == "OK" and inputText and inputText ~= "" then
-                    tempSettings.defaultFolder = inputText
-                    print("📁 기본 폴더 변경됨: " .. inputText)
-                    hs.alert.show("기본 폴더가 변경되었습니다", 2)
-                else
-                    print("📁 입력값이 유효하지 않음 - 버튼:", button, "텍스트:", inputText)
+                    -- 경로 유효성 검사
+                    if hs.fs.attributes(inputText) then
+                        tempSettings.defaultFolder = inputText
+                        print("📁 기본 폴더 변경됨: " .. inputText)
+                        hs.alert.show("✅ 기본 폴더가 변경되었습니다", 2)
+                    else
+                        hs.alert.show("⚠️ 해당 경로를 찾을 수 없습니다:\n" .. inputText, 3)
+                    end
+                elseif button == "OK" then
+                    hs.alert.show("⚠️ 유효한 폴더 경로를 입력해주세요", 2)
                 end
                 showChooser() -- 다시 chooser 표시
                 
             elseif choice.action == "chooserWidth" then
-                -- Chooser 너비 입력
-                local button, inputText = hs.dialog.textPrompt("Chooser 너비", "화면 너비 비율을 입력하세요 (10-90):", tostring(tempSettings.chooserWidth))
+                -- Chooser 너비 입력 (더 세련된 UI)
+                local button, inputText = hs.dialog.textPrompt(
+                    "🎨 Chooser 너비 설정", 
+                    "Chooser 창의 화면 너비 비율을 설정하세요:\n\n현재: " .. tempSettings.chooserWidth .. "%\n범위: 10% ~ 90%\n\n추천: 50-70%", 
+                    tostring(tempSettings.chooserWidth)
+                )
                 print("🔍 너비 - 버튼:", button, "입력:", inputText)
                 
                 if button == "OK" and inputText and inputText ~= "" then
@@ -262,18 +273,22 @@ function M.showSettingsModal()
                     if width and width >= 10 and width <= 90 then
                         tempSettings.chooserWidth = width
                         print("🎨 Chooser 너비 변경됨: " .. width)
-                        hs.alert.show("Chooser 너비가 변경되었습니다", 2)
+                        hs.alert.show("✅ Chooser 너비가 " .. width .. "%로 변경되었습니다", 2)
                     else
-                        hs.alert.show("너비는 10-90 사이의 숫자여야 합니다", 2)
+                        hs.alert.show("⚠️ 너비는 10-90 사이의 숫자여야 합니다\n\n입력된 값: " .. inputText, 3)
                     end
-                else
-                    print("🎨 너비 입력값이 유효하지 않음 - 버튼:", button, "텍스트:", inputText)
+                elseif button == "OK" then
+                    hs.alert.show("⚠️ 유효한 숫자를 입력해주세요 (10-90)", 2)
                 end
                 showChooser() -- 다시 chooser 표시
                 
             elseif choice.action == "chooserRows" then
-                -- Chooser 행 수 입력
-                local button, inputText = hs.dialog.textPrompt("Chooser 행 수", "최대 표시 줄 수를 입력하세요 (3-20):", tostring(tempSettings.chooserRows))
+                -- Chooser 행 수 입력 (더 세련된 UI)
+                local button, inputText = hs.dialog.textPrompt(
+                    "📏 Chooser 행 수 설정", 
+                    "Chooser 창에 표시할 최대 줄 수를 설정하세요:\n\n현재: " .. tempSettings.chooserRows .. "행\n범위: 3 ~ 20행\n\n추천: 8-12행", 
+                    tostring(tempSettings.chooserRows)
+                )
                 print("🔍 행 수 - 버튼:", button, "입력:", inputText)
                 
                 if button == "OK" and inputText and inputText ~= "" then
@@ -281,21 +296,28 @@ function M.showSettingsModal()
                     if rows and rows >= 3 and rows <= 20 then
                         tempSettings.chooserRows = rows
                         print("📏 Chooser 행 수 변경됨: " .. rows)
-                        hs.alert.show("Chooser 행 수가 변경되었습니다", 2)
+                        hs.alert.show("✅ Chooser 행 수가 " .. rows .. "행으로 변경되었습니다", 2)
                     else
-                        hs.alert.show("행 수는 3-20 사이의 숫자여야 합니다", 2)
+                        hs.alert.show("⚠️ 행 수는 3-20 사이의 숫자여야 합니다\n\n입력된 값: " .. inputText, 3)
                     end
-                else
-                    print("📏 행 수 입력값이 유효하지 않음 - 버튼:", button, "텍스트:", inputText)
+                elseif button == "OK" then
+                    hs.alert.show("⚠️ 유효한 숫자를 입력해주세요 (3-20)", 2)
                 end
                 showChooser() -- 다시 chooser 표시
                 
             elseif choice.action == "bgDark" then
-                -- 다크 모드 토글
+                -- 다크 모드 토글 (모달이 닫히지 않도록 즉시 다시 열기)
                 tempSettings.bgDark = not tempSettings.bgDark
                 print("🌙 다크 모드 변경됨: " .. tostring(tempSettings.bgDark))
-                hs.alert.show("다크 모드가 " .. (tempSettings.bgDark and "켜졌습니다" or "꺼졌습니다"), 2)
-                showChooser() -- 다시 chooser 표시
+                hs.alert.show(
+                    (tempSettings.bgDark and "🌙" or "☀️") .. " 다크 모드가 " .. 
+                    (tempSettings.bgDark and "활성화" or "비활성화") .. "되었습니다", 2
+                )
+                
+                -- 즉시 새로운 chooser를 표시하여 모달이 닫히지 않도록 함
+                hs.timer.doAfter(0.1, function()
+                    showChooser()
+                end)
                 
             elseif choice.action == "save" then
                 -- 설정 저장
@@ -308,66 +330,63 @@ function M.showSettingsModal()
                     local reloadSuccess = reloadConfig()
                     if reloadSuccess then
                         print("✅ 실시간 반영 완료")
-                        hs.alert.show("✅ 설정이 저장되고 실시간으로 적용되었습니다!", 3)
+                        hs.alert.show("🎉 설정이 성공적으로 저장되고 즉시 적용되었습니다!", 3)
                     else
                         print("⚠️ 설정 저장은 성공했지만 실시간 반영 실패")
-                        hs.alert.show("✅ 설정이 저장되었습니다!\n\nHammerspoon을 다시 로드하면 적용됩니다.", 3)
+                        hs.alert.show("✅ 설정이 저장되었습니다!\n\n🔄 Hammerspoon을 다시 로드하면 적용됩니다.", 3)
                     end
                 else
                     print("❌ 설정 저장 실패: " .. (saveMessage or "알 수 없는 오류"))
-                    hs.alert.show("❌ 설정 저장에 실패했습니다.\n\n" .. (saveMessage or "알 수 없는 오류"), 3)
+                    hs.alert.show("❌ 설정 저장에 실패했습니다.\n\n📝 오류: " .. (saveMessage or "알 수 없는 오류"), 3)
                 end
                 
-            elseif choice.action == "close" then
-                -- 설정 모달 닫기
-                print("❌ 설정 모달 닫기")
-                hs.alert.show("설정 모달을 닫습니다", 1)
             end
         end)
         
-        -- 업데이트된 선택지들
+        -- 업데이트된 선택지들 (더 세련된 UI)
         local updatedChoices = {
             {
                 text = "📁 기본 폴더 경로 변경",
                 subText = "현재: " .. tempSettings.defaultFolder,
                 action = "defaultFolder",
-                currentValue = tempSettings.defaultFolder
+                currentValue = tempSettings.defaultFolder,
+                image = hs.image.imageFromName("NSFolder")
             },
             {
-                text = "🎨 Chooser 너비 변경",
-                subText = "현재: " .. tempSettings.chooserWidth .. "% (10-90)",
+                text = "🎨 Chooser 너비 설정",
+                subText = "현재: " .. tempSettings.chooserWidth .. "% " .. string.rep("█", math.floor(tempSettings.chooserWidth/10)) .. string.rep("░", 9-math.floor(tempSettings.chooserWidth/10)),
                 action = "chooserWidth",
-                currentValue = tempSettings.chooserWidth
+                currentValue = tempSettings.chooserWidth,
+                image = hs.image.imageFromName("NSResize")
             },
             {
-                text = "📏 Chooser 행 수 변경",
-                subText = "현재: " .. tempSettings.chooserRows .. "행 (3-20)",
+                text = "📏 Chooser 행 수 설정",
+                subText = "현재: " .. tempSettings.chooserRows .. "행 " .. string.rep("▬", math.min(tempSettings.chooserRows, 10)),
                 action = "chooserRows",
-                currentValue = tempSettings.chooserRows
+                currentValue = tempSettings.chooserRows,
+                image = hs.image.imageFromName("NSListViewTemplate")
             },
             {
-                text = "🌙 다크 모드 토글",
-                subText = "현재: " .. (tempSettings.bgDark and "켜짐" or "꺼짐"),
+                text = "🌙 다크 모드 설정",
+                subText = "현재: " .. (tempSettings.bgDark and "🔅 켜짐" or "🔆 꺼짐"),
                 action = "bgDark",
-                currentValue = tempSettings.bgDark
+                currentValue = tempSettings.bgDark,
+                image = hs.image.imageFromName(tempSettings.bgDark and "NSStatusAvailable" or "NSStatusUnavailable")
             },
-            {
-                text = "💾 모든 설정 저장",
-                subText = "현재 설정을 JSON 파일에 저장",
-                action = "save"
-            },
-            {
-                text = "❌ 설정 모달 닫기",
-                subText = "변경사항을 저장하지 않고 닫기",
-                action = "close"
-            }
+                    {
+                        text = "💾 설정 저장",
+                        subText = "현재 설정을 JSON 파일에 저장",
+                        action = "save",
+                        image = hs.image.imageFromName("NSSaveDocumentTemplate")
+                    }
         }
         
         chooser:choices(updatedChoices)
-        chooser:placeholderText("⚙️ 설정을 선택하세요")
-        chooser:width(60)
-        chooser:rows(8)
+        chooser:placeholderText("⚙️ Hammerspoon 설정을 선택하세요")
+        chooser:width(70)  -- 조금 더 넓게
+        chooser:rows(7)    -- 조금 더 줄여서 깔끔하게
         chooser:bgDark(true)
+        chooser:searchSubText(true)  -- 서브텍스트에서도 검색 가능
         chooser:show()
     end
     
