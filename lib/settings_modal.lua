@@ -219,6 +219,12 @@ function M.showSettingsModal()
             subText = "현재 설정을 JSON 파일에 저장",
             action = "save",
             image = hs.image.imageFromName("NSSaveDocumentTemplate")
+        },
+        {
+            text = "❌ 설정 모달 닫기",
+            subText = "변경사항을 저장하지 않고 닫기",
+            action = "close",
+            image = hs.image.imageFromName("NSStopProgressFreestandingTemplate")
         }
     }
     
@@ -306,18 +312,14 @@ function M.showSettingsModal()
                 showChooser() -- 다시 chooser 표시
                 
             elseif choice.action == "bgDark" then
-                -- 다크 모드 토글 (모달이 닫히지 않도록 즉시 다시 열기)
+                -- 다크 모드 토글 (더 세련된 UI)
                 tempSettings.bgDark = not tempSettings.bgDark
                 print("🌙 다크 모드 변경됨: " .. tostring(tempSettings.bgDark))
                 hs.alert.show(
                     (tempSettings.bgDark and "🌙" or "☀️") .. " 다크 모드가 " .. 
                     (tempSettings.bgDark and "활성화" or "비활성화") .. "되었습니다", 2
                 )
-                
-                -- 즉시 새로운 chooser를 표시하여 모달이 닫히지 않도록 함
-                hs.timer.doAfter(0.1, function()
-                    showChooser()
-                end)
+                showChooser() -- 다시 chooser 표시
                 
             elseif choice.action == "save" then
                 -- 설정 저장
@@ -340,6 +342,10 @@ function M.showSettingsModal()
                     hs.alert.show("❌ 설정 저장에 실패했습니다.\n\n📝 오류: " .. (saveMessage or "알 수 없는 오류"), 3)
                 end
                 
+            elseif choice.action == "close" then
+                -- 설정 모달 닫기
+                print("❌ 설정 모달 닫기")
+                hs.alert.show("설정 모달을 닫습니다", 1)
             end
         end)
         
@@ -373,12 +379,18 @@ function M.showSettingsModal()
                 currentValue = tempSettings.bgDark,
                 image = hs.image.imageFromName(tempSettings.bgDark and "NSStatusAvailable" or "NSStatusUnavailable")
             },
-                    {
-                        text = "💾 설정 저장",
-                        subText = "현재 설정을 JSON 파일에 저장",
-                        action = "save",
-                        image = hs.image.imageFromName("NSSaveDocumentTemplate")
-                    }
+            {
+                text = "💾 설정 저장",
+                subText = "현재 설정을 JSON 파일에 저장",
+                action = "save",
+                image = hs.image.imageFromName("NSSaveDocumentTemplate")
+            },
+            {
+                text = "❌ 설정 모달 닫기",
+                subText = "변경사항을 저장하지 않고 닫기",
+                action = "close",
+                image = hs.image.imageFromName("NSStopProgressFreestandingTemplate")
+            }
         }
         
         chooser:choices(updatedChoices)
