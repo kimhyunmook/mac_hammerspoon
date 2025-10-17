@@ -242,18 +242,9 @@ function M.showSettingsModal()
             }
         }
         
-        -- 최근 사용 기록 기반으로 정렬
-        choices = chooserUtils.sortChoicesByRecentUsage(choices, "settings_modal", function(choice)
-            return choice.action
-        end)
-        
         local chooser = chooserUtils.createChooser({
             choices = choices,
             onSelect = function(choice)
-                if choice then
-                    -- 선택 기록 업데이트
-                    chooserUtils.recordChoiceSelection("settings_modal", choice)
-                end
                 
                 if choice.action == "defaultFolder" then
                     -- 기본 폴더 경로 입력

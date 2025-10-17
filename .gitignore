@@ -1,6 +1,5 @@
 # 설정 파일 - 개인별 설정이므로 버전 관리에서 제외
 settings.json
-.recent_usage.json
 
 # macOS 시스템 파일
 .DS_Store
