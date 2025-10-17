@@ -8,11 +8,9 @@ local settingsPath = hs.configdir .. "/settings.json"
 
 -- JSON 파일에서 설정 로드하는 함수
 local function loadSettings()
-    print("📖 설정 파일 로드 시작: " .. settingsPath)
     
     local settingsFile = io.open(settingsPath, "r")
     if not settingsFile then
-        print("⚠️ JSON 파일이 없음, 기본값 사용")
         -- JSON 파일이 없으면 기본값 반환
         return {
             cursor = {
@@ -33,7 +31,6 @@ local function loadSettings()
     settingsFile:close()
     
     if not settingsContent or #settingsContent == 0 then
-        print("⚠️ JSON 파일이 비어있음, 기본값 사용")
         return {
             cursor = {
                 defaultFolder = os.getenv("HOME") .. "/Desktop/back",
@@ -49,15 +46,11 @@ local function loadSettings()
         }
     end
     
-    print("📄 JSON 파일 내용 로드 완료 (" .. #settingsContent .. " bytes)")
     
     local success, settings = pcall(hs.json.decode, settingsContent)
     if success and settings then
-        print("✅ JSON 파싱 성공")
-        print("📁 로드된 기본 폴더: " .. (settings.cursor.defaultFolder or ""))
         return settings
     else
-        print("❌ JSON 파싱 실패: " .. tostring(settings))
         -- JSON 파싱 실패 시 기본값 반환
         return {
             cursor = {
@@ -89,8 +82,6 @@ config.getSettings = getCurrentSettings
 config.reload = function()
     local newSettings = getCurrentSettings()
     config.cursor = newSettings.cursor
-    print("🔄 config 실시간 리로드 완료")
-    print("📁 새로운 기본 폴더: " .. (config.cursor.defaultFolder or ""))
     return true
 end
 

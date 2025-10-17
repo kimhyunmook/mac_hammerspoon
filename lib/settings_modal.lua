@@ -10,13 +10,6 @@ local chooserUtils = require("lib.chooser_utils")
 local function saveSettingsToJson(settings)
     local settingsPath = hs.configdir .. "/settings.json"
     
-    print("💾 설정 저장 시작...")
-    print("📁 저장할 기본 폴더: " .. (settings.defaultFolder or ""))
-    print("🎨 Chooser 너비: " .. (settings.chooserWidth or ""))
-    print("📏 Chooser 행 수: " .. (settings.chooserRows or ""))
-    print("🌙 다크 모드: " .. tostring(settings.bgDark))
-    print("🔍 전체 설정 객체:", hs.inspect(settings))
-    print("📂 설정 파일 경로: " .. settingsPath)
     
     local settingsData = {
         cursor = {
@@ -27,7 +20,7 @@ local function saveSettingsToJson(settings)
                 bgDark = settings.bgDark,
                 placeholder = "📁 Cursor에서 열 폴더를 선택하세요",
                 showSubText = true,
-                iconSize = 24
+                iconSize = 16
             }
         }
     }
@@ -35,14 +28,10 @@ local function saveSettingsToJson(settings)
     -- JSON 인코딩 시도
     local jsonContent = hs.json.encode(settingsData, true) -- pretty print
     if not jsonContent then
-        print("❌ JSON 인코딩 실패")
         return false, "JSON 인코딩에 실패했습니다"
     end
     
-    print("✅ JSON 인코딩 완료 (" .. #jsonContent .. " bytes)")
-    
     -- Node.js fs.writeFileSync처럼 강제 덮어쓰기
-    print("🔄 파일 강제 덮어쓰기 시작...")
     
     -- 임시 파일명 생성
     local tempPath = settingsPath .. ".tmp"
@@ -50,7 +39,6 @@ local function saveSettingsToJson(settings)
     -- 1단계: 임시 파일에 쓰기
     local tempFile = io.open(tempPath, "w")
     if not tempFile then
-        print("❌ 임시 파일 생성 실패: " .. tempPath)
         return false, "임시 파일을 생성할 수 없습니다"
     end
     
@@ -59,23 +47,18 @@ local function saveSettingsToJson(settings)
     tempFile:close()
     
     if not writeResult then
-        print("❌ 임시 파일 쓰기 실패")
         os.remove(tempPath)  -- 임시 파일 정리
         return false, "임시 파일 쓰기에 실패했습니다"
     end
     
-    print("✅ 임시 파일 쓰기 완료")
-    
     -- 2단계: 기존 파일 삭제
     if hs.fs.attributes(settingsPath) then
-        print("🗑️ 기존 파일 삭제 중...")
         os.remove(settingsPath)
     end
     
     -- 3단계: 임시 파일을 원본 파일로 이동
     local moveResult = os.rename(tempPath, settingsPath)
     if not moveResult then
-        print("❌ 파일 이동 실패, 직접 복사 시도")
         
         -- 이동 실패 시 직접 복사
         local srcFile = io.open(tempPath, "r")
@@ -88,16 +71,12 @@ local function saveSettingsToJson(settings)
             srcFile:close()
             dstFile:close()
             os.remove(tempPath)  -- 임시 파일 정리
-            print("✅ 직접 복사 완료")
         else
-            print("❌ 직접 복사 실패")
             return false, "파일 복사에 실패했습니다"
         end
     else
-        print("✅ 파일 이동 완료")
     end
     
-    print("✅ 설정 파일 저장 완료: " .. settingsPath)
     
     -- 파일이 실제로 저장되었는지 확인
     local verifyFile = io.open(settingsPath, "r")
@@ -105,39 +84,28 @@ local function saveSettingsToJson(settings)
         local content = verifyFile:read("*all")
         verifyFile:close()
         if #content > 0 then
-            print("✅ 파일 저장 검증 완료")
-            print("📄 저장된 내용:", content)
             
             -- 저장된 내용이 실제로 새로운 설정과 일치하는지 확인
             local savedSettings = hs.json.decode(content)
             if savedSettings and savedSettings.cursor then
-                print("🔍 저장된 기본 폴더:", savedSettings.cursor.defaultFolder)
-                print("🔍 저장된 너비:", savedSettings.cursor.chooser.width)
-                print("🔍 저장된 행 수:", savedSettings.cursor.chooser.rows)
-                print("🔍 저장된 다크모드:", savedSettings.cursor.chooser.bgDark)
                 
                 -- 원본 설정과 비교
                 if savedSettings.cursor.defaultFolder == settings.defaultFolder then
-                    print("✅ 기본 폴더 저장 확인됨")
                 else
-                    print("❌ 기본 폴더 저장 불일치!")
                 end
             end
             
             return true, "설정이 성공적으로 저장되었습니다"
         else
-            print("❌ 파일이 비어있음")
             return false, "저장된 파일이 비어있습니다"
         end
     else
-        print("❌ 저장된 파일을 읽을 수 없음")
         return false, "저장된 파일을 읽을 수 없습니다"
     end
 end
 
 -- config 모듈 강제 리로드 함수
 local function reloadConfig()
-    print("🔄 config 모듈 리로드 시작...")
     
     -- config 모듈이 이미 로드되어 있는지 확인
     local config = package.loaded["config"]
@@ -145,10 +113,8 @@ local function reloadConfig()
         -- 새로운 reload 함수 사용
         local success = config.reload()
         if success then
-            print("✅ config 실시간 리로드 완료")
             return true
         else
-            print("❌ config 실시간 리로드 실패")
             return false
         end
     else
@@ -157,11 +123,8 @@ local function reloadConfig()
         
         local success, config = pcall(require, "config")
         if success then
-            print("✅ config 모듈 리로드 완료")
-            print("📁 새로운 기본 폴더: " .. (config.cursor.defaultFolder or ""))
             return true
         else
-            print("❌ config 모듈 리로드 실패: " .. tostring(config))
             return false
         end
     end
@@ -169,12 +132,10 @@ end
 
 -- 설정 모달 생성 (Chooser 방식으로 변경)
 function M.showSettingsModal()
-    print("🔧 설정 모달 시작...")
     
     -- config 로드 시도
     local success, config = pcall(require, "config")
     if not success then
-        print("❌ config 로드 실패: " .. tostring(config))
         hs.alert.show("❌ 설정 로드에 실패했습니다.", 2)
         return
     end
@@ -185,7 +146,6 @@ function M.showSettingsModal()
     local chooserRows = config.cursor.chooser.rows or 8
     local bgDark = config.cursor.chooser.bgDark or false
     
-    print("📁 기본 폴더: " .. defaultFolder)
     
     -- 설정 선택 옵션들 (더 세련된 UI)
     local choices = {
@@ -285,7 +245,6 @@ function M.showSettingsModal()
         local chooser = chooserUtils.createChooser({
             choices = choices,
             onSelect = function(choice)
-                print("🎯 선택된 항목: " .. choice.action)
                 
                 if choice.action == "defaultFolder" then
                     -- 기본 폴더 경로 입력
@@ -299,7 +258,6 @@ function M.showSettingsModal()
                         -- 경로 유효성 검사
                         if hs.fs.attributes(inputText) then
                             tempSettings.defaultFolder = inputText
-                            print("📁 기본 폴더 변경됨: " .. inputText)
                             hs.alert.show("✅ 기본 폴더가 변경되었습니다", 2)
                         else
                             hs.alert.show("⚠️ 해당 경로를 찾을 수 없습니다:\n" .. inputText, 3)
@@ -321,7 +279,6 @@ function M.showSettingsModal()
                         local width = tonumber(inputText)
                         if width and width >= 10 and width <= 90 then
                             tempSettings.chooserWidth = width
-                            print("🎨 Chooser 너비 변경됨: " .. width)
                             hs.alert.show("✅ Chooser 너비가 " .. width .. "%로 변경되었습니다", 2)
                         else
                             hs.alert.show("⚠️ 너비는 10-90 사이의 숫자여야 합니다\n\n입력된 값: " .. inputText, 3)
@@ -343,7 +300,6 @@ function M.showSettingsModal()
                         local rows = tonumber(inputText)
                         if rows and rows >= 3 and rows <= 20 then
                             tempSettings.chooserRows = rows
-                            print("📏 Chooser 행 수 변경됨: " .. rows)
                             hs.alert.show("✅ Chooser 행 수가 " .. rows .. "행으로 변경되었습니다", 2)
                         else
                             hs.alert.show("⚠️ 행 수는 3-20 사이의 숫자여야 합니다\n\n입력된 값: " .. inputText, 3)
@@ -356,7 +312,6 @@ function M.showSettingsModal()
                 elseif choice.action == "bgDark" then
                     -- 다크 모드 토글
                     tempSettings.bgDark = not tempSettings.bgDark
-                    print("🌙 다크 모드 변경됨: " .. tostring(tempSettings.bgDark))
                     hs.alert.show(
                         (tempSettings.bgDark and "🌙" or "☀️") .. " 다크 모드가 " .. 
                         (tempSettings.bgDark and "활성화" or "비활성화") .. "되었습니다", 2
@@ -365,28 +320,22 @@ function M.showSettingsModal()
                     
                 elseif choice.action == "save" then
                     -- 설정 저장
-                    print("💾 설정 저장 시작...")
                     local saveSuccess, saveMessage = saveSettingsToJson(tempSettings)
                     if saveSuccess then
-                        print("✅ 설정 저장 성공")
                         
                         -- config 모듈 리로드
                         local reloadSuccess = reloadConfig()
                         if reloadSuccess then
-                            print("✅ 실시간 반영 완료")
                             hs.alert.show("🎉 설정이 성공적으로 저장되고 즉시 적용되었습니다!", 3)
                         else
-                            print("⚠️ 설정 저장은 성공했지만 실시간 반영 실패")
                             hs.alert.show("✅ 설정이 저장되었습니다!\n\n🔄 Hammerspoon을 다시 로드하면 적용됩니다.", 3)
                         end
                     else
-                        print("❌ 설정 저장 실패: " .. (saveMessage or "알 수 없는 오류"))
                         hs.alert.show("❌ 설정 저장에 실패했습니다.\n\n📝 오류: " .. (saveMessage or "알 수 없는 오류"), 3)
                     end
                     
                 elseif choice.action == "close" then
                     -- 설정 모달 닫기
-                    print("❌ 설정 모달 닫기")
                     hs.alert.show("설정 모달을 닫습니다", 1)
                 end
             end
@@ -454,7 +403,6 @@ function M.showSettingsModal()
     end
     
     showChooser()
-    print("✅ 설정 모달 표시 완료")
 end
 
 return M
