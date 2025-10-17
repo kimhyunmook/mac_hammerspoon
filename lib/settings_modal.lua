@@ -200,8 +200,14 @@ function M.showSettingsModal()
     }
     
     local function showChooser()
-        -- 공용 chooser 모듈 사용
-        local chooserConfig = chooserUtils.getChooserConfig(config, "cursor")
+        -- 공용 chooser 모듈 사용 (실시간 설정 반영)
+        local chooserConfig = {
+            width = tempSettings.chooserWidth,
+            rows = tempSettings.chooserRows,
+            bgDark = tempSettings.bgDark,
+            placeholder = "⚙️ 설정을 선택하세요",
+            showSubText = true
+        }
         
         local choices = {
             {
@@ -233,12 +239,6 @@ function M.showSettingsModal()
                 subText = "변경사항을 저장하고 적용",
                 action = "save",
                 image = hs.image.imageFromName("NSSaveDocumentTemplate")
-            },
-            {
-                text = "❌ 설정 모달 닫기",
-                subText = "변경사항을 저장하지 않고 닫기",
-                action = "close",
-                image = hs.image.imageFromName("NSStopProgressFreestandingTemplate")
             }
         }
         
