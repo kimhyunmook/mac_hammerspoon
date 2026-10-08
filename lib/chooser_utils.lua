@@ -31,6 +31,7 @@ end
 -- @param config: 설정 객체
 --   - choices: 선택 옵션들
 --   - onSelect: 선택 시 실행할 함수 (choice 객체를 매개변수로 받음)
+--   - onCancel: 선택 없이 닫혔을 때 실행할 함수 (선택)
 --   - placeholder: placeholder 텍스트
 --   - width: chooser 너비
 --   - rows: 표시할 행 수
@@ -39,8 +40,12 @@ end
 -- @return hs.chooser: 생성된 chooser 객체
 function M.createChooser(config)
     local chooser = hs.chooser.new(function(choice)
-        if choice and config.onSelect then
-            config.onSelect(choice)
+        if choice then
+            if config.onSelect then
+                config.onSelect(choice)
+            end
+        elseif config.onCancel then
+            config.onCancel()
         end
     end)
     

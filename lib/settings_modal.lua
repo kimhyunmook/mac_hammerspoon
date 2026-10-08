@@ -147,50 +147,6 @@ function M.showSettingsModal()
     local bgDark = config.cursor.chooser.bgDark or false
     
     
-    -- 설정 선택 옵션들 (더 세련된 UI)
-    local choices = {
-        {
-            text = "📁 기본 폴더 경로 변경",
-            subText = "현재: " .. defaultFolder,
-            action = "defaultFolder",
-            currentValue = defaultFolder,
-            image = hs.image.imageFromName("NSFolder")
-        },
-        {
-            text = "🎨 Chooser 너비 설정",
-            subText = "현재: " .. chooserWidth .. "% " .. string.rep("█", math.floor(chooserWidth/10)) .. string.rep("░", 9-math.floor(chooserWidth/10)),
-            action = "chooserWidth",
-            currentValue = chooserWidth,
-            image = hs.image.imageFromName("NSResize")
-        },
-        {
-            text = "📏 Chooser 행 수 설정",
-            subText = "현재: " .. chooserRows .. "행 " .. string.rep("▬", math.min(chooserRows, 10)),
-            action = "chooserRows",
-            currentValue = chooserRows,
-            image = hs.image.imageFromName("NSListViewTemplate")
-        },
-        {
-            text = "🌙 다크 모드 설정",
-            subText = "현재: " .. (bgDark and "🔅 켜짐" or "🔆 꺼짐"),
-            action = "bgDark",
-            currentValue = bgDark,
-            image = hs.image.imageFromName(bgDark and "NSStatusAvailable" or "NSStatusUnavailable")
-        },
-        {
-            text = "💾 설정 저장",
-            subText = "현재 설정을 JSON 파일에 저장",
-            action = "save",
-            image = hs.image.imageFromName("NSSaveDocumentTemplate")
-        },
-        {
-            text = "❌ 설정 모달 닫기",
-            subText = "변경사항을 저장하지 않고 닫기",
-            action = "close",
-            image = hs.image.imageFromName("NSStopProgressFreestandingTemplate")
-        }
-    }
-    
     -- 임시 설정 저장용 테이블
     local tempSettings = {
         defaultFolder = defaultFolder,
@@ -198,6 +154,35 @@ function M.showSettingsModal()
         chooserRows = chooserRows,
         bgDark = bgDark
     }
+    
+    local originalSettings = {
+        defaultFolder = defaultFolder,
+        chooserWidth = chooserWidth,
+        chooserRows = chooserRows,
+        bgDark = bgDark
+    }
+    
+    -- 모달이 닫힐 때(ESC/바깥 클릭) 변경사항이 있으면 자동 저장
+    local function autoSave()
+        local changed = false
+        for key, value in pairs(tempSettings) do
+            if originalSettings[key] ~= value then
+                changed = true
+                break
+            end
+        end
+        if not changed then
+            return
+        end
+        
+        local saveSuccess, saveMessage = saveSettingsToJson(tempSettings)
+        if saveSuccess then
+            reloadConfig()
+            hs.alert.show("💾 설정이 자동 저장되었습니다", 2)
+        else
+            hs.alert.show("❌ 설정 자동 저장에 실패했습니다.\n\n📝 오류: " .. (saveMessage or "알 수 없는 오류"), 3)
+        end
+    end
     
     local function showChooser()
         -- 공용 chooser 모듈 사용 (실시간 설정 반영)
@@ -233,17 +218,12 @@ function M.showSettingsModal()
                 subText = "현재: " .. (tempSettings.bgDark and "ON" or "OFF"),
                 action = "bgDark",
                 image = hs.image.imageFromName("NSColorPanelTemplate")
-            },
-            {
-                text = "💾 설정 저장",
-                subText = "변경사항을 저장하고 적용",
-                action = "save",
-                image = hs.image.imageFromName("NSSaveDocumentTemplate")
             }
         }
         
         local chooser = chooserUtils.createChooser({
             choices = choices,
+            onCancel = autoSave,
             onSelect = function(choice)
                 
                 if choice.action == "defaultFolder" then
@@ -317,73 +297,9 @@ function M.showSettingsModal()
                         (tempSettings.bgDark and "활성화" or "비활성화") .. "되었습니다", 2
                     )
                     showChooser() -- 다시 chooser 표시
-                    
-                elseif choice.action == "save" then
-                    -- 설정 저장
-                    local saveSuccess, saveMessage = saveSettingsToJson(tempSettings)
-                    if saveSuccess then
-                        
-                        -- config 모듈 리로드
-                        local reloadSuccess = reloadConfig()
-                        if reloadSuccess then
-                            hs.alert.show("🎉 설정이 성공적으로 저장되고 즉시 적용되었습니다!", 3)
-                        else
-                            hs.alert.show("✅ 설정이 저장되었습니다!\n\n🔄 Hammerspoon을 다시 로드하면 적용됩니다.", 3)
-                        end
-                    else
-                        hs.alert.show("❌ 설정 저장에 실패했습니다.\n\n📝 오류: " .. (saveMessage or "알 수 없는 오류"), 3)
-                    end
-                    
-                elseif choice.action == "close" then
-                    -- 설정 모달 닫기
-                    hs.alert.show("설정 모달을 닫습니다", 1)
                 end
             end
         })
-        
-        -- 업데이트된 선택지들 (더 세련된 UI)
-        local updatedChoices = {
-            {
-                text = "📁 기본 폴더 경로 변경",
-                subText = "현재: " .. tempSettings.defaultFolder,
-                action = "defaultFolder",
-                currentValue = tempSettings.defaultFolder,
-                image = hs.image.imageFromName("NSFolder")
-            },
-            {
-                text = "🎨 Chooser 너비 설정",
-                subText = "현재: " .. tempSettings.chooserWidth .. "% " .. string.rep("█", math.floor(tempSettings.chooserWidth/10)) .. string.rep("░", 9-math.floor(tempSettings.chooserWidth/10)),
-                action = "chooserWidth",
-                currentValue = tempSettings.chooserWidth,
-                image = hs.image.imageFromName("NSResize")
-            },
-            {
-                text = "📏 Chooser 행 수 설정",
-                subText = "현재: " .. tempSettings.chooserRows .. "행 " .. string.rep("▬", math.min(tempSettings.chooserRows, 10)),
-                action = "chooserRows",
-                currentValue = tempSettings.chooserRows,
-                image = hs.image.imageFromName("NSListViewTemplate")
-            },
-            {
-                text = "🌙 다크 모드 설정",
-                subText = "현재: " .. (tempSettings.bgDark and "🔅 켜짐" or "🔆 꺼짐"),
-                action = "bgDark",
-                currentValue = tempSettings.bgDark,
-                image = hs.image.imageFromName(tempSettings.bgDark and "NSStatusAvailable" or "NSStatusUnavailable")
-            },
-            {
-                text = "💾 설정 저장",
-                subText = "현재 설정을 JSON 파일에 저장",
-                action = "save",
-                image = hs.image.imageFromName("NSSaveDocumentTemplate")
-            },
-            {
-                text = "❌ 설정 모달 닫기",
-                subText = "변경사항을 저장하지 않고 닫기",
-                action = "close",
-                image = hs.image.imageFromName("NSStopProgressFreestandingTemplate")
-            }
-        }
         
         -- 공용 모듈의 chooser 설정 적용
         chooser:placeholderText(chooserConfig.placeholder or "⚙️ 설정을 선택하세요")
@@ -399,6 +315,7 @@ function M.showSettingsModal()
             chooser:choices(choices) -- 업데이트된 choices 다시 설정
         end
         
+        M.activeChooser = chooser
         chooser:show()
     end
     
